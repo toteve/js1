@@ -1,0 +1,322 @@
+{\rtf1\ansi\deff0{\fonttbl{\f0\fnil\fcharset0 Segoe Print;}{\f1\fnil\fcharset0 Calibri;}}
+{\*\generator Msftedit 5.41.21.2509;}\viewkind4\uc1\pard\tx360\tx720\tx1080\tx1440\tx1800\tx2160\tx2520\tx2880\tx3240\tx3600\tx3960\tx4320\tx4680\tx5040\tx5400\tx5760\tx6120\tx6480\tx6840\tx7200\tx7560\tx7920\tx8280\tx8640\tx9000\tx9360\tx9720\tx10080\tx10440\tx10800\tx11160\tx11520\lang8202\f0\fs22 resumen General de Javascript Full Stack\par
+\par
+1. npm init --y   crear el package.json\par
+\par
+2. npm install (todos los modulos requeridos multer.js, express.js, dotenv.js, \par
+mongoose.js (conexion a mongoDB), ......\par
+\par
+3. CREAR:\par
+   INDEX.JS ES EL PRINCIPAL ARRANQUE DE BACKEND\par
+   DATABASE.JS ES EL Q TIENE CONEXION A BD\par
+   CARPETAS ROUTES (PARA URL O APIREST el BOOKS.JS)\par
+   CARPETAS MODELS ( MODELO DE DATOS el BOOK.JS)\par
+   CARPETA PUBLIC Y DENTRO UPLOADS SE CREAN EN RUNTIME\par
+\par
+4. EJECUTAR: \par
+\par
+NODE BACKEND\\INDEX.JS (ESTO EJECUTA APLICATIVO Q INICIA SERVIDOR BACKEND)\par
+\par
+5. MIDDLE WARES INVOCACION Y USO ( TODOS LOS MIDDLEWARE SON FUNCIONES) Y PARA EVITAR EL REINICIO CADA RATO DEL BACKEND, INSTALAMOS Y EJECUTAMOS NODEMON:\par
+\par
+NPM INSTALL NODEMON -D (PARA QUE NO SE INSTALE COMO DEPENDENCIA)   \par
+\par
+NODEMON  BACKEND/INDEX.JS\par
+\par
+NPX NODEMON BACKEND/INDEX.JS (ALTERNO SINO FUNCIONA, anterior por estar instalado solo localmente)\par
+\par
+PARA NO ESCRIBIR CADA RATO, VAMOS A PACKAGE.JSON Y CONFIGURAMOS UN SCRIPT EN LA SECCION DE SCRIPTS:\par
+\par
+DES="NODEMON  BACKEND/INDEX.JS"\par
+\par
+Y EJECUTA NPM RUN DES ( EJECUTA EL SCRIPT DEL PACK.JSON DEFINIDO EN EL SCRIPT "DES"\par
+\par
+dentro de INDEX.JS\par
+previo INVOCACION DE MODULO PATH Y USAMOS _dirname\par
+EN MULTER.DISKSTORAGE COMO DESTINATION: path.join(_dirname, 'public/uploads'\par
+\par
+y nombre archivos newDate().getTime() genera "7865434567" que sera nombre y extension sera path.extname(file.originalname) toma extension original de archivo seleccionado\par
+\par
+y single('image') con esto asegura que desde un formulario viene una imagen, manejaremos de una a la vez\par
+\par
+y con urlencode traducimos formularios como Json petciones Ajax\par
+\par
+6. STATIC FILES creacion de rutas (books.js)\par
+\par
+en index.js, invocamos app.use('/api/books', require('./routes/books'));\par
+\par
+esto requiere que desde books.js se exporte el modulo Router asi que si vemos en Books.js:\par
+\par
+const \{ Router \} = require('express');\par
+// se crea instancia Router \par
+const router = Router(); \par
+// EXPORTAMOS router que es requerida desde /BACKEND/index.js\par
+// para procesar peticion get/post/delete  \par
+module.exports = router;\par
+\par
+Asi el objeto Router creado en Books.js es devuelto como respuesta del llamado require('./routes/books') desde Index.js\par
+\par
+ASI BOOKS.JS RESOLVERA TODAS LAS URL O RUTAS REQUERIDAS (API REST Q RECIBIRA Y ENVIARA JSON) Y LO QUE SE QUIERA HACER EN CADA RUTAS     \par
+\par
+// static files permitira acceso a carpetas y sera la carpeta "public" q contendria lo q el navegador tendra acceso (todos los archivos no dinamicos solo estaticos) y el index.html q este alli (puedes acceder con localhost:4000 o localhost:4000/public), el navegador tendra acceso a ese HTML, CSS Y JAVASCRIPT que esten ahi, codigo para definir estaticos:\par
+\par
+app.use(express.static(path.join(__dirname, 'public'))); dentro de Index.js\par
+\par
+7. Base de datos, como conectarnos desde database.js y eso si tiene que estar instalado y levantado Mongodb\par
+\par
+require('./database');    index.js requerimos un archivo database.js\par
+\par
+ahora desde database.js establecemos la conexion con el modulo Mongoose:\par
+\par
+const mongoose = require('mongoose'); se invoca el modulo\par
+\par
+// mongodb://localhost/javascriptdb (local de forma directa en vez de  process.env.URI)\par
+\par
+// process.env.URI (usado variables de ambiente en archivo .env)\par
+\par
+mongoose.connect(process.env.URI,\par
+\{\par
+    useNewUrlParser: true,  // defecto de biblioteca mongoose\par
+    useUnifiedTopology: true\par
+\}) \par
+    .then(db => console.log(`MongoDB tenemos conexion`))\par
+    .catch(err => console.error(err)); // procesara error de conexion\par
+\par
+finalmente desde Route.js requerimos el modulo Book.js que esta dentro de la carpeta Models, definiendo el BookSchema y Model:\par
+\par
+const Book = require('../models/Book'); desde Routes.js\par
+\par
+en Book.js se define esquema y modelo:\par
+\par
+const \{ Schema, model \} = require('mongoose');\par
+\par
+// CONSTRUIMOS ESQUEMA BD O SEA SUS CAMPOS DE COLLECTION\par
+const BookSchema = new Schema(\{\par
+    title: \{ type: String, required: true \},\par
+    author: \{ type: String, required: true \},\par
+    isbn: \{ type: String, required: true \},\par
+    imagePath: \{ type: String \}, // ruta y nombre en string\par
+    created_at: \{ type: Date, default: Date.now \}\par
+\});\par
+\par
+//EXPORTAMOS EL MODELO EN VARIABLE BOOK que puede ser usada por otros modulos\par
+module.exports = model('Book', BookSchema);\par
+\par
+8. Variables de Entorno:\par
+\par
+Permite definir los entornos (desarrollo, prueba o produccion), esto lo hacemos con CROSS_ENV y para manejar archivo de variables de ambiente en .env  que puede ser leido con modulo DOTENV\par
+\par
+require('dotenv').config(); en index.js que arranca todo el backend y \par
+HABILITA lectura de .env, solo se usa en desarrollo\par
+\par
+al final .env no se subira al servidor colocandollo en .gitignore\par
+\par
+en pack.json definimos el ambiente en los script y entonces puedo tener:\par
+\par
+     "start": "cross-env NODE_ENV=production node backend/index.js",\par
+     "postinstall": "npm run build",\par
+    "des": "cross-env NODE_ENV=development nodemon backend/index.js",\par
+    "build": "cross-env NODE_ENV=production webpack",\par
+    "dev": "webpack-dev-server"\par
+\par
+mientras desarrollamos ejecutamos:\par
+\par
+npm run des  (desarrollo ambiente funciona y lee el .env)\par
+npm start (no lee el .env)\par
+\par
+9.- API REST  ESTO EN BOOKS.JS QUE ESTA EN CARPETA ROUTES\par
+\par
+USAR POSTMAN PARA SIMULAR CONSULTAS, GRABAR Y BORRAR\par
+\par
+CON EL BE COMO SI FUERA EL FE USANDO JSON\par
+\par
+PROGRAMAR GET, POST Y DELETE\par
+\par
+10. DEPENDENCIAS PARA EL FRONTEND, A PARTIR DE ESTE PUNTO DE PARTIDA:\par
+\par
+LO PRINCIPAL ES EL USO DE EMPAQUETADOR DE CODIGO DE FRONTEND LLAMADO WEBPACK:\par
+\par
+NPM I WEBPACK, WEBPACK-CLI, HTML-WEBPACK-PLUGIN\par
+       CCS-LOADER, STYLE-LOADER, MINI-CSS-EXTRACT-PLUGIN,  WEBPACK-DEV-SERVER, TIMEAGO-JS  -D\par
+\par
+-D para que solo se utilicen todas estas dependencias para desarrollo y luego al final con WEBPACK se empaquetaran el Index.html, *.css y *.js Y TRASLADADOS en sus carpetas respectivas dentro de la carpeta BACKEND \par
+\par
+11. configuracion de WEBPACK\par
+\par
+Crear el archivo webpack.config.js ( que sera ejecutado en desarrollo por Node para convertir a produccion ), sin embargo mientras se configura se puede ir ejecutando como va a quedando.\par
+\par
+el Javascript del front end se llamara bundle.js en la carpeta destino Backend/js/bundle.js en local y en /js/bundle.js en servidor web\par
+\par
+Igual se hace para convertir el Index.html del Frontend y lo convierte al Backend el archivo Index.html comprimido en una sola linea ( ojo usa template de HTML WEBPACK PLUGIN EN su documentacion )\par
+\par
+Nota: ejecutando "npx webpack" ( ejecuta el webpack para hacer la conversion de todos los .js del Frontend en un solo bundle.js optimizado, igual con el index.html del Frontend y con los *.css y crea un solo bundle.css ), esto solo es en linea de comando, cada modificacion del webpack.config.js y al ejecutarse hace la conversion.\par
+\par
+Para NO TENER que escribir a cada modificacion npx webpack, vamos al pack.json y creamos el script:\par
+\par
+"build": "cross-env NODE_ENV=production webpack"\par
+\par
+y ahora linea de comando es npm run build ( esto se encargara de evaluar el ambiente dev/prod y ejecutara el webpack )\par
+\par
+Aparte el index.html del Frontend cuando es convertido se agregan los script de acceso al Javascript e igual el link para el bundle.css, de esa forma el Index.html del Backend es diferente al del Frontend, eliminara comentarios, espacios en blancos, y otras cosas para minificar el HTML, ese codigo optimizado es para produccion y seguimos teniendo nuestro original Index.html y los *.css, *.js que estan en Frontend\par
+\par
+para que cada cambio en archivos del frontend no se reinicie el servidor de  desarrollo del Backend que esta corriendo con Nodemos, agregamos lo siguiente en el script que ejecuta Nodemon en el package.json :\par
+\par
+Actual:\par
+"des": "cross-env NODE_ENV=development nodemon backend/index.js"\par
+\par
+Cambio:\par
+"des": "cross-env NODE_ENV=development nodemon backend/index.js --ignore frontend"\par
+\par
+\par
+\par
+12. User Interface con BOOTSTRAP4/BOOTSWATCH\par
+\par
+cambios en el INDEX.HTML:\par
+\par
+eN EL Header \par
+\par
+copiar la CDN de pagina de Bootstrap\par
+y la biblioteca ANIMATE (buscamos en internet animate.css y nos traemos de su repositorio su CDN)\par
+\par
+nota: Cada vez que hacemos cambios en archivos del Frontend, tenemos que estar ejecutando npm run build, esperar que genere los cambios completos por cada cambio que realizamos en el Frontend, para evitar eso vamos a agregar el siguiente script en el package.json:\par
+\par
+ "dev": "webpack-dev-server"\par
+\par
+Esto creara un servidor en LOCALHOST:8080 para todo lo que tiene que ver de desarrollo del Frontend\par
+\par
+y se ejecuta  "npm run dev" (MIENTRAS SE DESAROLLA FE)\par
+\par
+Para convertir sera ejecutado: "npm run build" (AL TENER TODO LISTO)\par
+\par
+ y entonces para ver los cambios finales lo podemos ver en LOCALHOST:4000 y en /api/books consumir la API REST, despues de ejecutar npm run build\par
+\par
+13. Clases y Servicios ( Desarrollar los javascript necesarios para operar el sistema empezando por el Submit del Formulario y recurrir a los ID de HTML COLOCADOS A LOS ELEMENTOS DEL FORMULARIO del INDEX.HTML PARA QUE SEAN CAPTURADOS POR JAVASCRIPT), TAMBIEN INCLUYE Renderizado de Datos y FETCH \par
+\par
+const var = document.getElementById(id).value\par
+const var1 = document.getElementById(id1).files (esta es asi para manager id1 q es una 'image' y por tanto no aplica "value"\par
+\par
+SERVICIOS (bookservices.js es una clase con metodos q son reutilizables), ES EL QUE SE ENCARGA DE INTERACTUAR CON EL BACKEND PARA ESO AL INVOCAR "FETCH" SE REQUIERE EN INDEX.JS DEL BACKEND ESTE REQUERIDO CORS ( MODULO QUE HABILITA COMUNICACION DIRECTA ENTRE FRONTEND SERVER Y BACKEND SERVER)\par
+\par
+3 metodos para interqctuar con Backend (getbook petIcion GET, postbook peticion POST y deletebook peticion DELETE) Y la respuesta de estas funciones es un string legible o crudo y hay que convertirlo en un Json de siguiente forma:\par
+\par
+const response = await fetch(this.URI); ( esta es consulta a la api rest  api/books y responde dato string crudo, el valor de la propiedad this.URI ='/api/books' )\par
+\par
+const books = response.json(); (la respuesta que debe dar el servidor en Json con un metodo de response)\par
+\par
+y todo lo vamos a programar con procesos asicronos con async/await \par
+\par
+el CICLO es app.js importa el book.js de carpeta Models (modelo de datos) y el UI.JS de carpeta Frontend (que maneja el DOM y UI importa al BOOKSERVICE.JS que maneja los servicios de GET, POST Y DELETE\par
+\par
+RECORDAR QUE IMAGEN SIEMPRE SE DEBE RUTEAR DESDE EL LOCALHOST:4000 QUE ES EL QUE SIEMPRE MANTIENE LA CARPETA PUBLICA Y DENTRO DE ELLA UPLOADS DEL BACKEND \par
+\par
+14. Delete, http y eliminar imagenes de BD y CARPETA uploads\par
+\par
+Hay que programar con JS y dentro de APP.js HAY que capturar el evento Click en boton Delete que acompa\'f1e la imagen, se toma el elemento de id='books-cards'  y SE busca la clase Delete que contenga dentro de id='books-cards' y se hace uso del bookId para TRES cosas:\par
+\par
+1. CON UI.js borrar de pantalla de interface del FrontEnd\par
+2. Con BOOKSERVICE.js enviar al Backend la orden para borrar PETICION DELETE y elimina de MongoDB\par
+3. En el mismo bookservice.js, eliminamos las imagenes de public\\uploads, de la siguiente forma:\par
+\par
+await unlink(path.resolve('./backend/public/' + book.imagePath));\par
+\par
+y programamos una funcion renderMessage para mostrar diversos mensajes para situaciones de Agregar y Eliminar, esta funcion estara dentro de UI.js y es invocada desde APP.JS para desplegar los mensajes \par
+\par
+15. Subida de sistema js fullstack con git y heroku\par
+\par
+heroku resolvera el backend de nodejs\par
+\par
+y con mongodb atlas se manejara la base de datos\par
+\par
+1. iniciamos con heroku\par
+\par
+create app y le damos un nombre, lugar EEUU y crear (esto creara en heroku un espacio javascript-fullstack-simple1 \par
+\par
+2. como subir:\par
+\par
+a) via hostearlo a GitHub y despues subir a Heroku conectando a Github\par
+\par
+b) via Heroku Cli que permita usar un Git propio de Heroku:\par
+\par
+si ya esta instalado escribe: heroku login\par
+y enter 2 veces\par
+\par
+para validar por navegador con usuario y clave\par
+\par
+3. ahora en la carpeta local, vamos a crear un repositorio con GIT, ejecutando:\par
+\par
+git init (iniciar repositorio)\par
+git add . (pasar de wd a stagging)\par
+git  commit \par
+    -m "subir JSFULL proyecto" (esto es al final despues de revisar package.json, webpack.config.js, frontend y backend)\par
+\par
+nota: el .gitignore esta ignorando para ser subidos lo siguiente:\par
+\par
+carpeta node_modules ( se puede instalar en server con npm install )\par
+\par
+archivo .env ( variables de ambiente y bd que se usan en desarrollo )\par
+\par
+carpeta backend\\public ( que con el index.js lo crea en tiempo de ejecucion con npm run build )\par
+\par
+NOTA:\par
+Una vez todo claro se ejecuta el commit desde el repositorio local \par
+\par
+y a continuacion se ejecuta los siguientes comandos de Heroku:\par
+\par
+heroku git:remote -a javascript-fullstack-simple1 (esto te conecta a un repositorio git de Heroku para el proyecto)\par
+\par
+git push heroku master (manda los archivos al repositorio y ejecuta las configuraciones indicadas)\par
+\par
+ABRIR APLICACION:\par
+\par
+heroku open\par
+\par
+VER ERRORES:\par
+\par
+heroku logs --tail\par
+( no hay conexion con base de datos, la local en disco duro perdio conexion porque no lee .env  y la de Atlas  no ha sido creada y no hay conexion)\par
+\par
+Dentro de Heroku vamos a SETTINGS y VARS para variables de entorno, equivalente lo que teniamos en .env\par
+\par
+KEY = URI\par
+VALOR = CREAR BD EN MONGODB\par
+\par
+EN MONGODB:\par
+\par
+1. LOGUEARTE\par
+2. NEW PROJECT\par
+3. NOMBRE: JSFULLDB\par
+4. definir accesos y permisos\par
+5. nombre del cluster\par
+6. crear usuario y clave para conexion, los valores: usuario y user123, dandole permisos de lectura y escritura a la BD\par
+6.5 DEFINIR desde que IP se puede conectar escogemos desde cualquier parte\par
+en LISTA BLANCA\par
+7. elegir tipo de conexion desde aplicacion y copiar la cadena de conexion:\par
+\par
+ORIGINAL OFERTADA POR ATLAS:\par
+mongodb+srv://dbuser:<password>@cluster0-ao00u.gcp.mongodb.net/<dbname>?retryWrites=true&w=majority\par
+\par
+LA CORRECTA SUSTITUYENDO password y dbname\par
+mongodb+srv://usuario:user123@cluster0-ao00u.gcp.mongodb.net/jsfulldb?retryWrites=true&w=majority\par
+\par
+const BookSchema = new Schema(\{\par
+    title: \{ type: String, required: true \},\par
+    author: \{ type: String, required: true \},\par
+    isbn: \{ type: String, required: true \},\par
+    imagePath: \{ type: String \}, // ruta y nombre en string\par
+    created_at: \{ type: Date, default: Date.now \}\par
+\});""\par
+\par
+\par
+ \par
+\par
+4. que va hacer heroku para tener todo adecuado:\par
+\par
+4.1 npm install (para instalar node_modules en servidor)\par
+\par
+4.2 el script npm postinstall (que se debe definir en el package.json y el a su vez ejecuta: npm run build y esto habilitara otro  script que ejecutara el webpack para convertir el frontend(html, css y el js) a carpeta destino backend\\public), finalmente ejecutara npm start q indica levante index.js del backend)\par
+\par
+-------------------------------------------------------\par
+\pard\sa200\sl276\slmult1\lang10\f1\par
+\par
+}
+ 
